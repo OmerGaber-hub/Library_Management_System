@@ -6,7 +6,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class DatabaseHelper {
   static const _databaseName = "LibraryDatabase.db";
-  static const _databaseVersion = 2;
+  static const _databaseVersion = 3;
 
   DatabaseHelper._privateConstructor();
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
@@ -36,6 +36,10 @@ class DatabaseHelper {
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute('ALTER TABLE books ADD COLUMN cover_image_path TEXT;');
+    }
+    if (oldVersion < 3) {
+      await db.execute('ALTER TABLE borrowers ADD COLUMN balance REAL NOT NULL DEFAULT 0.0;');
+      await db.execute('ALTER TABLE borrowings ADD COLUMN return_requested INTEGER NOT NULL DEFAULT 0;');
     }
   }
 

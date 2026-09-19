@@ -175,6 +175,37 @@ class _BorrowingsScreenState extends State<BorrowingsScreen> {
     );
   }
 
+  Future<void> _requestReturn(BorrowingModel b) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('طلب إرجاع الكتاب', style: TextStyle(color: AppColors.primaryNavy)),
+        content: const Text('هل أنت متأكد أنك تريد إرسال طلب إرجاع لهذا الكتاب؟ \nسيتم إشعار الإدارة لتأكيد الاستلام.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('إلغاء')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryNavy),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('نعم، أرسل الطلب', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        b.returnRequested = true;
+        await _repo.update(b);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إرسال طلب الإرجاع بنجاح، بانتظار الإدارة.'), backgroundColor: Colors.green));
+          _loadBorrowings();
+        }
+      } catch (e) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -262,20 +293,39 @@ class _BorrowingsScreenState extends State<BorrowingsScreen> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Chip(
-                                  label: Text(isBorrowed ? (isLate ? 'متأخر' : 'مستعار') : 'مرتجع', style: const TextStyle(color: Colors.white, fontSize: 10)),
-                                  backgroundColor: isBorrowed ? (isLate ? Colors.red : Colors.orange) : Colors.green,
-                                  padding: EdgeInsets.zero,
-                                ),
+                                if (b.returnRequested && isBorrowed)
+                                  Chip(
+                                    label: const Text('بانتظار التأكيد', style: TextStyle(color: Colors.white, fontSize: 10)),
+                                    backgroundColor: Colors.purple,
+                                    padding: EdgeInsets.zero,
+                                  )
+                                else
+                                  Chip(
+                                    label: Text(isBorrowed ? (isLate ? 'متأخر' : 'مستعار') : 'مرتجع', style: const TextStyle(color: Colors.white, fontSize: 10)),
+                                    backgroundColor: isBorrowed ? (isLate ? Colors.red : Colors.orange) : Colors.green,
+                                    padding: EdgeInsets.zero,
+                                  ),
+                                  
                                 if (_isAdmin && isBorrowed)
                                   ElevatedButton.icon(
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.blue,
+                                      backgroundColor: b.returnRequested ? Colors.purple : Colors.blue,
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                     ),
                                     onPressed: () => _markReturned(b),
                                     icon: const Icon(Icons.keyboard_return, size: 16, color: Colors.white),
                                     label: const Text('إرجاع', style: TextStyle(color: Colors.white, fontSize: 12)),
+                                  ),
+                                  
+                                if (!_isAdmin && isBorrowed && !b.returnRequested)
+                                  ElevatedButton.icon(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.accentGold,
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    ),
+                                    onPressed: () => _requestReturn(b),
+                                    icon: const Icon(Icons.assignment_return, size: 16, color: Colors.white),
+                                    label: const Text('طلب إرجاع', style: TextStyle(color: Colors.white, fontSize: 12)),
                                   ),
                               ],
                             ),

@@ -7,6 +7,7 @@ class BorrowingModel {
   String expectedReturnDate;
   String? actualReturnDate;
   String status;
+  bool returnRequested;
 
   BorrowingModel({
     this.id,
@@ -17,6 +18,7 @@ class BorrowingModel {
     required this.expectedReturnDate,
     this.actualReturnDate,
     this.status = 'borrowed',
+    this.returnRequested = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -29,6 +31,7 @@ class BorrowingModel {
       'expected_return_date': expectedReturnDate,
       'actual_return_date': actualReturnDate,
       'status': status,
+      'return_requested': returnRequested ? 1 : 0,
     };
   }
 
@@ -42,6 +45,7 @@ class BorrowingModel {
       expectedReturnDate: map['expected_return_date'],
       actualReturnDate: map['actual_return_date'],
       status: map['status'],
+      returnRequested: map['return_requested'] == 1,
     );
   }
 }

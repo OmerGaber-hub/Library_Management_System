@@ -5,6 +5,7 @@ class BorrowerModel {
   String? address;
   String membershipDate;
   String membershipStatus;
+  double balance;
 
   BorrowerModel({
     this.id,
@@ -13,6 +14,7 @@ class BorrowerModel {
     this.address,
     required this.membershipDate,
     this.membershipStatus = 'active',
+    this.balance = 0.0,
   });
 
   Map<String, dynamic> toMap() {
@@ -23,6 +25,7 @@ class BorrowerModel {
       'address': address,
       'membership_date': membershipDate,
       'membership_status': membershipStatus,
+      'balance': balance,
     };
   }
 
@@ -34,6 +37,7 @@ class BorrowerModel {
       address: map['address'],
       membershipDate: map['membership_date'],
       membershipStatus: map['membership_status'],
+      balance: map['balance'] != null ? (map['balance'] as num).toDouble() : 0.0,
     );
   }
 }

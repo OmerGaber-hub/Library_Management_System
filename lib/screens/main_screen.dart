@@ -14,6 +14,7 @@ import 'borrowings_screen.dart';
 import 'reservations_screen.dart';
 import 'fines_screen.dart';
 import 'settings_screen.dart';
+import 'wallet_screen.dart';
 
 import 'books/books_screen.dart';
 
@@ -150,6 +151,15 @@ class _MainScreenState extends State<MainScreen> {
             
             // ALL USERS
             const Divider(),
+            if (!isStaff)
+              ListTile(
+                leading: const Icon(Icons.account_balance_wallet, color: AppColors.accentGold),
+                title: const Text('محفظتي', style: TextStyle(fontWeight: FontWeight.bold)),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const WalletScreen()));
+                },
+              ),
             ListTile(
               leading: const Icon(Icons.bookmark),
               title: const Text('الحجوزات'),

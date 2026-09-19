@@ -102,6 +102,50 @@ class _FinesScreenState extends State<FinesScreen> {
     }
   }
 
+  Future<void> _payWithBalance(FineModel fine) async {
+    final user = AuthRepository.currentUser;
+    if (user == null) return;
+    
+    BorrowerModel? borrower = await _borrowerRepo.getByUserId(user.id!);
+    if (borrower == null) return;
+
+    if (borrower.balance >= fine.amount) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('تأكيد الدفع', style: TextStyle(color: AppColors.primaryNavy)),
+          content: Text('سيتم خصم مبلغ ${fine.amount} من رصيدك الحالي (${borrower.balance}). هل تريد المتابعة؟'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('إلغاء')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('دفع', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm == true) {
+        try {
+          borrower.balance -= fine.amount;
+          await _borrowerRepo.update(borrower);
+          fine.paymentStatus = 'paid';
+          await _repo.update(fine);
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم دفع الغرامة بنجاح خصماً من رصيدك'), backgroundColor: Colors.green));
+            _loadFines();
+          }
+        } catch (e) {
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ أثناء الدفع: $e')));
+        }
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('رصيدك غير كافٍ، الرجاء شحن محفظتك أولاً.'), backgroundColor: Colors.red));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -200,6 +244,16 @@ class _FinesScreenState extends State<FinesScreen> {
                                     onPressed: () => _markAsPaid(f),
                                     icon: const Icon(Icons.check_circle, size: 16, color: Colors.white),
                                     label: const Text('تسديد', style: TextStyle(color: Colors.white, fontSize: 12)),
+                                  ),
+                                if (!_isAdmin && isUnpaid)
+                                  ElevatedButton.icon(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.accentGold,
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    ),
+                                    onPressed: () => _payWithBalance(f),
+                                    icon: const Icon(Icons.payment, size: 16, color: Colors.white),
+                                    label: const Text('دفع الآن', style: TextStyle(color: Colors.white, fontSize: 12)),
                                   ),
                               ],
                             ),

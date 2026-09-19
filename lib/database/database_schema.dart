@@ -79,7 +79,8 @@ class DatabaseSchema {
       address TEXT,
       membership_date TEXT NOT NULL,
       membership_status TEXT NOT NULL DEFAULT 'active',
-      FOREIGN KEY (user_id) REFERENCES users(id)
+      balance REAL NOT NULL DEFAULT 0.0,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   ''';
 
@@ -88,14 +89,15 @@ class DatabaseSchema {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       borrower_id INTEGER NOT NULL,
       copy_id INTEGER NOT NULL,
-      employee_user_id INTEGER,
+      employee_user_id INTEGER NOT NULL,
       borrow_date TEXT NOT NULL,
       expected_return_date TEXT NOT NULL,
       actual_return_date TEXT,
       status TEXT NOT NULL DEFAULT 'borrowed',
-      FOREIGN KEY (borrower_id) REFERENCES borrowers(id),
-      FOREIGN KEY (copy_id) REFERENCES book_copies(id),
-      FOREIGN KEY (employee_user_id) REFERENCES users(id)
+      return_requested INTEGER NOT NULL DEFAULT 0,
+      FOREIGN KEY (borrower_id) REFERENCES borrowers(id) ON DELETE CASCADE,
+      FOREIGN KEY (copy_id) REFERENCES book_copies(id) ON DELETE CASCADE,
+      FOREIGN KEY (employee_user_id) REFERENCES users(id) ON DELETE RESTRICT
     )
   ''';
 
