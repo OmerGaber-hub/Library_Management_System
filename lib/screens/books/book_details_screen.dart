@@ -18,6 +18,7 @@ import '../../models/borrower_model.dart';
 import '../../models/reservation_model.dart';
 import 'book_reader_screen.dart';
 import 'add_edit_book_screen.dart';
+import 'package:share_plus/share_plus.dart';
 
 class BookDetailsScreen extends StatefulWidget {
   final BookModel book;
@@ -372,30 +373,34 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                   ),
                   onPressed: () async {
                     try {
-                      final sourceFile = File(book.pdfPath!);
-                      // Basic Android Downloads path fallback for local testing
-                      final downloadDir = Directory('/storage/emulated/0/Download');
-                      if (!await downloadDir.exists()) {
-                        await downloadDir.create(recursive: true);
-                      }
-                      final destFile = File('${downloadDir.path}/${book.title}.pdf');
-                      await sourceFile.copy(destFile.path);
-                      
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('تم حفظ الكتاب بنجاح في مجلد التنزيلات (Downloads)'), backgroundColor: Colors.green),
+                          const SnackBar(content: Text('جاري تجهيز الملف...')),
+                        );
+                      }
+                      
+                      final file = XFile(book.pdfPath!);
+                      final result = await Share.shareXFiles(
+                        [file],
+                        text: 'كتاب: ${book.title}',
+                        subject: book.title,
+                      );
+                      
+                      if (result.status == ShareResultStatus.success && mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('تمت العملية بنجاح!'), backgroundColor: Colors.green),
                         );
                       }
                     } catch (e) {
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('حدث خطأ أثناء التنزيل: $e'), backgroundColor: Colors.red),
+                          SnackBar(content: Text('حدث خطأ أثناء المشاركة/الحفظ: $e'), backgroundColor: Colors.red),
                         );
                       }
                     }
                   },
-                  icon: const Icon(Icons.download, color: Colors.white, size: 20),
-                  label: const Text('تنزيل', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                  icon: const Icon(Icons.share, color: Colors.white, size: 20),
+                  label: const Text('مشاركة / حفظ', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
                 ),
               ),
             ]
